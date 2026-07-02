@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faraher 2026 — Version A</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --cr:#7D1820; --cr-dk:#4A0E12; --gold:#9A6F20; --gd-lt:#C49A38;
+  --bl:#1A3A5C; --grn:#1A5C2A;
+  --ppr:#F6F0E8; --ppr-d:#EDE5D6; --ppr-m:#F0E8D8;
+  --ink:#1A1208; --ink-m:#3D2A12; --ink-l:#6B5030;
+  --rule:#C0A070; --rl-lt:#D8C090;
+  --serif:'Source Serif 4',Georgia,serif;
+  --disp:'EB Garamond',Georgia,serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:#B8AE9C;background-image:radial-gradient(ellipse at 20% 10%,#C8BFB0 0%,transparent 60%),radial-gradient(ellipse at 80% 90%,#A89880 0%,transparent 60%);min-height:100vh;padding:12px;font-family:var(--serif);font-size:10.5px}
+html::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.board{position:relative;z-index:1;max-width:1600px;margin:0 auto;background:var(--ppr);border:1px solid #A89060;box-shadow:0 0 0 1px rgba(255,255,255,.5) inset,0 12px 48px rgba(0,0,0,.28),0 3px 10px rgba(0,0,0,.18);display:flex;flex-direction:column}
+
+/* HEADER */
+.hd{background:var(--cr-dk);background-image:linear-gradient(135deg,#3A080C 0%,var(--cr-dk) 40%,var(--cr) 100%);padding:10px 20px 10px;border-bottom:2px solid var(--gd-lt);display:grid;grid-template-columns:60px 1fr 60px;gap:16px;align-items:center}
+.hd-logo{display:flex;flex-direction:column;align-items:center;gap:5px}
+.hd-logo-box{width:52px;height:52px;border:1.5px solid rgba(255,255,255,.2);border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:16px;font-weight:700;color:rgba(255,255,255,.5);overflow:hidden}
+.hd-logo-txt{font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:center}
+.hd-center{text-align:center}
+.hd-dept{font-family:var(--mono);font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:7px}
+.hd-title{font-family:var(--disp);font-size:clamp(13px,1.5vw,20px);font-weight:700;color:#fff;line-height:1.25;margin-bottom:5px}
+.hd-title em{font-style:italic;color:#E8C870}
+.hd-sub{font-family:var(--serif);font-size:10px;font-style:italic;color:rgba(255,255,255,.58);margin-bottom:8px}
+.hd-authors{font-family:var(--serif);font-size:11px;color:rgba(255,255,255,.72)}
+.hd-authors small{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.38);display:block;margin-top:2px}
+.hd-badge{background:rgba(200,150,50,.18);border:1px solid rgba(200,150,50,.45);border-radius:2px;padding:3px 10px;font-family:var(--mono);font-size:8px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#E8C870;display:inline-block;margin-top:5px}
+
+/* CONSTRUCT BAR */
+.cs-bar{background:var(--ppr-d);border-bottom:1.5px solid var(--rule);padding:7px 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cs-label{font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-l);flex-shrink:0}
+.cs-btn{font-family:var(--mono);font-size:9px;padding:2px 10px;border:1px solid var(--rl-lt);border-radius:2px;background:var(--ppr);color:var(--ink-m);cursor:pointer;transition:all .15s}
+.cs-btn:hover,.cs-btn.on{background:var(--cr);color:#fff;border-color:var(--cr)}
+.cs-explain{font-family:var(--serif);font-size:10.5px;font-style:italic;color:var(--ink-l);line-height:1.4;flex:1;min-width:200px}
+
+/* HINT BAR */
+.hint-bar{background:var(--ppr-m);border-bottom:1px solid var(--rl-lt);padding:4px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.hint{font-family:var(--mono);font-size:8.5px;color:var(--ink-l);letter-spacing:.3px;display:flex;align-items:center;gap:4px}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.dot.r{background:var(--cr)} .dot.b{background:var(--bl)} .dot.g{background:var(--gold)}
+
+/* COLUMNS */
+.cols{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--rule)}
+.col{padding:10px 13px 12px;display:flex;flex-direction:column;gap:7px}
+.col:not(:last-child){border-right:1.5px solid var(--rule)}
+
+/* SECTION HEADS */
+.sh{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1.5px solid var(--rule);padding-bottom:3px;color:var(--cr-dk)}
+.sh.blue{color:var(--bl);border-color:var(--bl)}
+.sh.gold{color:var(--gold);border-color:var(--gold)}
+.sh.grn{color:var(--grn);border-color:var(--grn)}
+.sh.cont{font-size:8.5px;opacity:.85}
+
+/* BODY TEXT */
+.body{font-family:var(--serif);font-size:10.5px;line-height:1.55;color:var(--ink-m)}
+
+/* EXPANDABLE */
+.xpd{border-left:3px solid var(--rl-lt);padding:5px 9px;cursor:pointer;border-radius:0 2px 2px 0;transition:border-color .15s,background .15s}
+.xpd:hover{border-left-color:var(--cr);background:rgba(125,24,32,.04)}
+.xpd-hd{font-family:var(--disp);font-size:12px;font-weight:600;color:var(--ink);line-height:1.3}
+.xpd-hd.blue{color:var(--bl)} .xpd-hd.red{color:var(--cr)}
+.xpd-prev{font-family:var(--serif);font-size:10.5px;font-style:italic;color:var(--ink-l)}
+.xpd-body{max-height:0;overflow:hidden;transition:max-height .38s ease;font-family:var(--serif);font-size:10.5px;line-height:1.55;color:var(--ink-m)}
+.xpd-body.open{max-height:300px}
+.xpd-body p{padding-top:5px}
+
+/* CAUSAL CHAIN */
+.chain{display:flex;align-items:stretch;justify-content:space-between;margin:2px 0 4px;gap:0}
+.cn{background:var(--bl);color:#fff;padding:6px 5px;border-radius:3px;cursor:pointer;transition:all .18s;flex:1;min-width:0;border:1.5px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:48px}
+.cn:hover{background:var(--cr-dk);transform:scale(1.05);z-index:2}
+.cn.focal{background:var(--cr);border-color:#A03030}
+.cn.focal:hover{background:var(--cr-dk)}
+.cn.med{background:#225022}
+.cn.med:hover{background:#143214}
+.cn-main{font-family:var(--mono);font-size:7.5px;font-weight:600;text-align:center;line-height:1.3;color:inherit}
+.cn-sub{font-family:var(--mono);font-size:6.5px;opacity:.65;text-align:center;margin-top:2px;color:inherit}
+.ca{display:flex;flex-direction:column;align-items:center;padding:0 2px;flex-shrink:0;justify-content:center}
+.ca-b{font-family:var(--mono);font-size:8px;font-weight:600;color:var(--ink-m)}
+.ca-arrow{font-size:12px;color:var(--gd-lt);line-height:1}
+.ca-lbl{font-family:var(--mono);font-size:6.5px;color:var(--ink-l)}
+.suppress{font-family:var(--mono);font-size:8px;background:rgba(125,24,32,.06);border:1px dashed rgba(125,24,32,.25);border-radius:2px;padding:3px 8px;text-align:center;color:var(--cr)}
+
+/* STAT ROWS */
+.sr{display:flex;justify-content:space-between;align-items:baseline;padding:4px 7px;border-bottom:1px solid var(--rl-lt);cursor:pointer;border-radius:2px;transition:background .12s}
+.sr:hover{background:rgba(125,24,32,.06)}
+.sr:last-child{border-bottom:none}
+.sr-lbl{font-family:var(--serif);font-size:10.5px;color:var(--ink-m)}
+.sr-val{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--cr)}
+.sr-val.blue{color:var(--bl)} .sr-val.gold{color:var(--gold)} .sr-val.grn{color:var(--grn)}
+
+/* TABLES */
+.mtbl,.ptbl,.vtbl{width:100%;border-collapse:collapse;font-size:10.5px}
+.mtbl th,.ptbl th,.vtbl th{font-family:var(--mono);font-size:8px;font-weight:600;background:var(--ppr-d);padding:3px 5px;color:var(--ink-l);border-bottom:2px solid var(--rule);text-align:center}
+.mtbl th:first-child,.ptbl th:first-child,.vtbl th:first-child{text-align:left}
+.mtbl td,.ptbl td,.vtbl td{padding:3px 5px;border-bottom:1px solid var(--rl-lt)}
+.mtbl td:first-child,.ptbl td:first-child,.vtbl td:first-child{font-family:var(--serif);color:var(--ink-m)}
+.mtbl td:not(:first-child),.ptbl td:not(:first-child),.vtbl td:not(:first-child){text-align:center;font-family:var(--mono);font-size:10px}
+.mtbl tr:hover td,.ptbl tr:hover td,.vtbl tr:hover td{background:rgba(125,24,32,.04);cursor:pointer}
+.r-val{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--cr)}
+.g-row td{background:rgba(26,92,42,.06);color:var(--grn);font-weight:600}
+.pos{color:var(--grn);font-weight:600} .neg{color:var(--cr);font-weight:600} .nzr{color:var(--gold);font-weight:600}
+.hi td{background:rgba(26,92,42,.06)}
+.logit td{background:rgba(154,111,32,.06);font-style:italic;font-size:9.5px}
+
+/* FIGURE */
+.fig{border:1px solid var(--rl-lt);border-radius:3px;padding:8px;cursor:pointer;background:rgba(255,255,255,.35);transition:border-color .15s,box-shadow .15s;position:relative}
+.fig:hover{border-color:var(--cr);box-shadow:0 2px 10px rgba(125,24,32,.12)}
+.fig canvas{display:block;width:100%!important}
+.fig-cap{font-family:var(--mono);font-size:8px;color:var(--ink-l);margin-top:5px;line-height:1.4}
+.fig-badge{position:absolute;top:5px;right:5px;font-family:var(--mono);font-size:7.5px;background:var(--bl);color:#fff;padding:1px 5px;border-radius:1px;opacity:0;transition:opacity .15s}
+.fig:hover .fig-badge{opacity:1}
+
+/* PARTY COMPARISON */
+.party-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:2px 0}
+.pc{border-radius:3px;padding:7px 10px;text-align:center}
+.pc.dem{background:rgba(26,58,92,.09);border:1px solid rgba(26,58,92,.3)}
+.pc.rep{background:rgba(125,24,32,.08);border:1px solid rgba(125,24,32,.25)}
+.pc-party{font-family:var(--mono);font-size:8.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.pc-party.dem{color:var(--bl)} .pc-party.rep{color:var(--cr)}
+.pc-val{font-family:var(--disp);font-size:22px;font-weight:700;line-height:1}
+.pc-val.dem{color:var(--bl)} .pc-val.rep{color:var(--cr)}
+.pc-sub{font-family:var(--serif);font-size:9.5px;color:var(--ink-l);margin-top:2px}
+.delta-box{background:rgba(26,92,42,.07);border:1px solid rgba(26,92,42,.3);border-radius:3px;padding:5px 10px;text-align:center;cursor:pointer;transition:background .15s}
+.delta-box:hover{background:rgba(26,92,42,.14)}
+.delta-lbl{font-family:var(--mono);font-size:8px;color:var(--ink-l);margin-bottom:2px}
+.delta-val{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--grn)}
+
+/* TIMELINE */
+.tl-slider{width:100%;accent-color:var(--cr);cursor:pointer;height:3px;display:block;margin-bottom:6px}
+.tl-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.tl-card{background:var(--ppr-d);border:1px solid var(--rl-lt);border-radius:2px;padding:5px 7px;text-align:center;transition:all .3s}
+.tl-card.hi{border-color:var(--cr)}
+.tl-yr{font-family:var(--mono);font-size:8.5px;color:var(--ink-l)}
+.tl-val{font-family:var(--disp);font-size:18px;font-weight:700;color:var(--cr)}
+.tl-val.blue{color:var(--bl)}
+.tl-lbl{font-family:var(--serif);font-size:9px;color:var(--ink-l)}
+.tl-bar-wrap{height:4px;background:rgba(0,0,0,.08);border-radius:2px;margin-top:3px;overflow:hidden}
+.tl-bar{height:100%;border-radius:2px;transition:width .5s ease}
+.tl-note{font-family:var(--serif);font-size:9.5px;font-style:italic;color:var(--ink-l);margin-top:4px}
+
+/* CONVERGENCE */
+.conv-box{background:linear-gradient(135deg,var(--cr-dk) 0%,var(--cr) 100%);border-radius:4px;padding:10px 12px}
+.conv-title{font-family:var(--disp);font-size:12px;font-weight:700;color:var(--gd-lt);text-align:center;margin-bottom:7px}
+.conv-row{display:flex;gap:6px;align-items:flex-start;margin-bottom:5px}
+.conv-row:last-child{margin-bottom:0}
+.conv-marker{font-family:var(--disp);font-size:13px;font-weight:700;font-style:italic;color:var(--gd-lt);flex-shrink:0;width:18px;text-align:center;line-height:1.2;opacity:.9}
+.conv-txt{font-family:var(--serif);font-size:10.5px;color:rgba(255,255,255,.88);line-height:1.45}
+.conv-txt strong{color:var(--gd-lt)}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:3px}
+.chip{font-family:var(--mono);font-size:8.5px;padding:2px 8px;border-radius:10px;cursor:pointer;transition:all .15s}
+.chip.r{background:rgba(125,24,32,.09);color:var(--cr);border:1px solid rgba(125,24,32,.2)}
+.chip.b{background:rgba(26,58,92,.09);color:var(--bl);border:1px solid rgba(26,58,92,.2)}
+.chip.g{background:rgba(154,111,32,.1);color:var(--gold);border:1px solid rgba(154,111,32,.25)}
+.chip:hover{filter:brightness(1.15);transform:scale(1.05)}
+
+/* QUIZ WIDGET */
+.qz-wrap{border:1px solid var(--rl-lt);border-radius:3px;overflow:hidden}
+.qz-q{background:var(--cr);color:#fff;padding:7px 10px;font-family:var(--disp);font-size:11.5px;font-style:italic;line-height:1.4}
+.qz-opts{}
+.qz-opt{padding:4px 10px;font-family:var(--serif);font-size:10.5px;color:var(--ink-m);cursor:pointer;transition:background .12s;display:flex;align-items:baseline;gap:5px;border-bottom:1px solid var(--rl-lt)}
+.qz-opt:last-child{border-bottom:none}
+.qz-opt:hover{background:rgba(125,24,32,.05)}
+.qz-opt.correct{background:rgba(26,92,42,.1);color:var(--grn)}
+.qz-opt.wrong{background:rgba(125,24,32,.07);color:var(--cr)}
+.qk{font-family:var(--mono);font-size:9px;width:14px;flex-shrink:0}
+.qz-fb{display:none;padding:5px 10px;font-family:var(--serif);font-size:10.5px;font-style:italic;border-top:1px solid var(--rl-lt);line-height:1.5}
+.qz-fb.show{display:block}
+.qz-fb.good{color:var(--grn)} .qz-fb.bad{color:var(--cr)}
+.qz-nav{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 10px;background:var(--ppr-d);border-top:1px solid var(--rl-lt)}
+.qz-dot{width:7px;height:7px;border-radius:50%;background:var(--rl-lt);cursor:pointer;transition:background .15s}
+.qz-dot.on{background:var(--cr)}
+.qz-reset{font-family:var(--mono);font-size:8.5px;padding:2px 8px;border:1px solid var(--rule);background:var(--ppr);color:var(--ink-l);border-radius:2px;cursor:pointer;transition:all .15s;margin-left:4px}
+.qz-reset:hover{background:var(--cr);color:#fff;border-color:var(--cr)}
+.qz-slide{display:none}
+.qz-slide.active{display:block}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,10,5,.6);z-index:900;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--ppr);border-radius:4px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 16px 64px rgba(0,0,0,.4);border-top:3px solid var(--cr);position:relative;padding:20px 24px 22px}
+.modal.blue{border-top-color:var(--bl)} .modal.gold{border-top-color:var(--gold)} .modal.grn{border-top-color:var(--grn)}
+.modal-x{position:absolute;top:10px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-l);line-height:1}
+.modal-x:hover{color:var(--cr)}
+.modal-title{font-family:var(--disp);font-size:18px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.modal-meta{font-family:var(--mono);font-size:9px;color:var(--ink-l);margin-bottom:12px}
+.modal-body{font-family:var(--serif);font-size:12px;line-height:1.65;color:var(--ink-m)}
+.modal-body p+p{margin-top:8px}
+.modal-canvas-wrap{margin-top:14px}
+#tt{display:none;position:fixed;background:var(--ppr);border:1px solid var(--rule);border-left:2.5px solid var(--cr);padding:7px 11px;max-width:260px;font-family:var(--serif);font-size:11px;line-height:1.5;color:var(--ink-m);box-shadow:2px 4px 14px rgba(0,0,0,.15);z-index:800;pointer-events:none}
+
+/* FOOTER */
+.ft{background:var(--cr-dk);padding:8px 20px;display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--gd-lt);flex-wrap:wrap;gap:5px}
+.ft-txt{font-family:var(--serif);font-size:9.5px;color:rgba(255,255,255,.65);font-style:italic}
+.ft-mono{font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,.42)}
+</style>
+</head>
+<body>
+<div class="board">
+
+<header class="hd">
+  <div class="hd-logo"><div class="hd-logo-box" style="background:transparent;border:none;padding:4px;overflow:hidden;"><img src="data:image/png;base64,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" alt="IU Logo" style="display:block;width:100%;height:100%;object-fit:contain;"/></div><div class="hd-logo-txt">Indiana<br>University</div></div>
+  <div class="hd-center">
+    <div class="hd-title">Partisan Animosity, Outgroup Dehumanization, and Political Violence:<br><em>A Three-Study Mediation Analysis</em></div>
+    <div class="hd-sub">Dehumanization as the Psychological Bridge Between Partisan Hatred and Violence Endorsement</div>
+    <div class="hd-authors">Nathan Faraher &nbsp;|&nbsp; Advisor: Aurelian Craiutu<small>IMP Final Project Symposium · April 2026</small></div>
+  </div>
+  <div class="hd-logo"><div class="hd-logo-box" style="background:transparent;border:none;padding:4px;overflow:hidden;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAGQklEQVR4nO1ZW2wVxxn+/pnZ3ePjHh/fMIFYsolsiu0oN5WYINEg9aGhgkShSdTmViKlRO0LpTzTxmkUVJK3lES88kBRL1FAjeSmSYC4JCkCIy6OYhzFMsTH2NgY+9jn5pn5+7A2cUAiwjvWCdL5nnZ3Zvefb+a/L+0lLAwkZV6bjQcPNT66iY0hKW/p9fCV4ePH/9ne7gli5oUtQyzste8PSgSKjRKBYqNEoNgoESg21CJ+e35wpYUG/O/CYhJYtEXPh0sCVmsArA0p2ffXA5/tei1RmQQwPTnZ9qst923fHg4BELeYON0ELgkIpQBAKQCVzU2+7w99+hmAiubm6lWrhFLhkFs4+iJRITPd8/bb0EYolc9l63/88JqOjvc2bwZw//bfJRoa/vfqq7GyMjbGaN2ydWu8psaJZDcESAiTyZzatSs9dkUCOaB927Zla9eytQwYbQY6O7t27gwABnylGn/+RLy21oloN27Ual1WU/vU2XNVy5eTUi0bNqx9/Y3CxAQBAshfGbvv9zseeO5ZoVR5IvHU6dPVK5tDg4kOd3GASP2g3BpjtRYkpKeAOTfKLJQUQlmtWWu/vJzcOSiXgYznNpWZcUOFxWzDC1d7H8JpJJ6/rzfZY6fx4bZPJRaHADMbw3ZWZ9haNuZGpXICxwRC6xSeR1Kq8vLwoSorIylFEIQz3Ep0GRqZ2eTzimik++R/nnlmsu+8IgD4cv/+8XOfD3/6iUdkC/lrJ+ME7ggwe0EsVleXHR/PD6XO798vAEkAMH6u5/K5Hg+wQFBZ5VVUOFQnNypERMzsxeM/feed8vr6rOXrFEUABcCrqnrk0KF4XR0zuwoFzk6AhGDmmtbWx7s+Hj5xwgvKLv67s2fPHgaan/5l0y+enslla+++u7qlha0lIdgYJ3Jd2gARsbXJxhXJxhUAbD539q23GKhbvXrFpo3hnHD1DoU6zm9JCDszA6L+gwe7duxQzABO/Hm39GOtW38NZuF5biUuQkVGJJTKjY5OjYwk6pYASE9MTA8NCqXcJhEh3BMIy5ofbtly15NP0Jy3CWOC+B4WNGGUvdEipe+rYF7JwnzdnPA2uilHJeAlEiTld/8cILpuTnjrJ5MRFxCBALMAvj78YX56irW+Vd/C1pJSV3t7I4YDWvAfmhCaEUUJBOBFW0BkFZLCixJTmSOmRg6MOOIXIuK2L2gcOGYiAhGYmfmaKc+eDFGYtIVV8jeGTkRE1kWV44CAtmzBYfJcMBYAAYpoNkiAAUiAgBljMderYCAIp0ZDJAJCyrw2bS++2PT88z1vvvnVP/6+4d13/aqqwY8+OtnRAWD5unU/+tMrgDj5h50Tvb0/OXCAwcLzClfGL77/fs/evWR0eEDFIQAiC1S1rKpft27wX++B0fCzR6QXJO9acXb37kw227BxY/3D6wF8sWzZ9IULd65fD6CQmfbj5Y2bNlW2tR79zW8DKRb8lxtOjFhns2yMzucBzEym2Zj40juSK1cCWPLgg2GuYWdmWBs25mpf3747lv/t3nuzY2MtL7yQWFJrjI1S3DggQEKQlOEiSEoIkp5X+8D9vhQ199xj9AxJiblRtqaQnkydOTM9lFJBzEskGJEqfcduVPp++utBncsvfWht5aqWWHX18KlTCL1QOCEWq2hqWvnYY5VNzZnR0czIZUGIokJOuxKA8P3spUvpgYGlD61p6O/PXL481t19Z/saWAshAFQ0ND7b1xfO79q2LTc1FSgZJSddjIqscLGzc/XLf2x96aWhrq5sKoV53dLM6OiZPX/RE5NDR4+OdHcHgiJm1A4IcNiHYwZgtRZKDR453C5eSTY0nNr1WlBRMduWY2ZjcsPDx1/uCAX7UkTPRKLaAAMqFiMpZRAAkH5QVld35fTpQnoSQOrwET+ZJCmF50EQSelXVcYDP66Up6STPCrSCTCzAMa/6E0d++9kfz8BFz/8IHNpJD813btvX3Vb29W+8+mBgdSxY5nhYZ3Lprq60hcGjNZkLISbvlDUegCAZVhAAIKgGQAUQTMY8AiWYQAFEBCW9Mppd9SBDQhBkig0U08KgNmGF2BrvzUqZh9GF3oNLrwQ8zVHPr+lfpNRh7jt64ESgWKjRKDYKBEoNkoEio0SgWLj/8wqzAUDtrDMAAAAAElFTkSuQmCC" alt="IMP Logo" style="display:block;width:100%;height:100%;object-fit:contain;transform:scale(1.85);transform-origin:center center;"/></div><div class="hd-logo-txt">Individualized<br>Major Program</div></div>
+</header>
+
+<div class="cs-bar">
+  <span class="cs-label">Explore:</span>
+  <button class="cs-btn on" onclick="setCS(this,'anim')">Partisan Animosity (IV)</button>
+  <button class="cs-btn" onclick="setCS(this,'ap')">Affective Polarization</button>
+  <button class="cs-btn" onclick="setCS(this,'np')">Negative Partisanship</button>
+  <button class="cs-btn" onclick="setCS(this,'dh')">Dehumanization (Med.)</button>
+  <button class="cs-btn" onclick="setCS(this,'pv')">Political Violence (DV)</button>
+  <span class="cs-explain" id="cs-text"><em>Partisan animosity</em> = outparty feeling thermometer coldness (0–100). The focal IV in Study 2. One pole of affective polarization; downstream product of negative partisanship. Not the full AP spread.</span>
+</div>
+
+<div class="hint-bar">
+  <span class="hint"><span class="dot r"></span>Click nodes &amp; rows to drill deeper</span>
+  <span class="hint"><span class="dot b"></span>Click charts to expand</span>
+  <span class="hint"><span class="dot g"></span>Study 3 — global panel in column 4</span>
+  <span class="hint"><span class="dot r"></span>Drag the U.S. timeline</span>
+  <span class="hint"><span class="dot b"></span>Rotate the quiz with the dots below</span>
+</div>
+
+<div class="cols">
+
+<!-- ═══ COLUMN 1: Background + Theory + Study 1 Chart + Measures ═══ -->
+<div class="col">
+
+  <div class="sh">Background</div>
+  <p class="body">As partisan animosity and political violence rise in the United States, questions of causation arise. Psychological research lends that dehumanization may be the causal gateway.</p>
+
+  <div class="xpd" onclick="toggleX(this)">
+    <div class="xpd-hd blue">▸ Three Related, Non-Identical Constructs</div>
+    <div class="xpd-prev">Negative Partisanship → Affective Polarization → Partisan Animosity…</div>
+    <div class="xpd-body">
+      <p><strong style="color:var(--bl)">Negative Partisanship</strong> (Abramowitz &amp; Webster, 2016) — structural/motivational upstream condition. Partisan identity organized around opposition. Webster (2020) <em>American Rage</em>: this anger erodes democratic norms; elites sustain it for electoral loyalty.</p>
+      <p><strong style="color:var(--bl)">Affective Polarization</strong> (Iyengar et al., 2012) — inparty warmth minus outparty coldness spread. What V-DEM v2cacamps captures in Study 3.</p>
+      <p><strong style="color:var(--cr)">Partisan Animosity ← FOCAL IV</strong> — outparty thermometer coldness (0–100). One pole of AP; directly measured in Landry (2024).</p>
+    </div>
+  </div>
+
+  <div class="sh">Causal Model — Click Any Node</div>
+  <div class="chain">
+    <div class="cn" onclick="showM('neg_part')"><div class="cn-main">Negative Partisanship</div><div class="cn-sub">upstream</div></div>
+    <div class="ca"><div class="ca-arrow">→</div></div>
+    <div class="cn" onclick="showM('aff_pol')"><div class="cn-main">Affective Polarization</div><div class="cn-sub">spread</div></div>
+    <div class="ca"><div class="ca-arrow">→</div></div>
+    <div class="cn focal" onclick="showM('pn_anim')"><div class="cn-main">Partisan Animosity</div><div class="cn-sub">focal IV</div></div>
+    <div class="ca"><div class="ca-b">β=.535</div><div class="ca-arrow">→</div><div class="ca-lbl">a-path</div></div>
+    <div class="cn med" onclick="showM('pn_med')"><div class="cn-main">Dehumanization</div><div class="cn-sub">mediator</div></div>
+    <div class="ca"><div class="ca-b">β=.159</div><div class="ca-arrow">→</div><div class="ca-lbl">b-path</div></div>
+    <div class="cn" onclick="showM('pn_dv')"><div class="cn-main">Violence Support</div><div class="cn-sub">DV</div></div>
+  </div>
+  <div class="suppress">c-path (Animosity → Violence direct): β = −.050 ≈ 0 — suppressor structure</div>
+
+  <div class="sh">Hypotheses</div>
+  <div class="xpd" onclick="showM('h1')">
+    <div class="xpd-hd red">H₁ — Mediation (click for detail)</div>
+    <div class="xpd-prev">Dehumanization significantly mediates partisan animosity → violence.</div>
+  </div>
+  <div class="xpd" onclick="showM('h2')" style="margin-top:3px">
+    <div class="xpd-hd blue">H₂ — Asymmetry (click for detail)</div>
+    <div class="xpd-prev">This mediated pathway is significantly stronger among Republicans.</div>
+  </div>
+
+  <div class="sh blue">Study 1 — Meta-Analysis</div>
+  <p class="body" style="margin-bottom:4px">Random-effects meta-analysis (DerSimonian &amp; Laird, 1986), k=37 corrected effect sizes.</p>
+  <div class="fig" onclick="openFig('f_meta')">
+    <canvas id="c_meta" height="145"></canvas>
+    <div class="fig-cap">Fig. 1 — Corrected pooled effect sizes by pathway.</div>
+  </div>
+
+  <div class="sh" style="margin-top:2px">Data &amp; Measures — Click Rows</div>
+  <table class="ptbl">
+    <tr><th>Role</th><th colspan="2">Construct &amp; Operationalization</th></tr>
+    <tr onclick="showM('m_iv')"><td>Focal IV</td><td colspan="2"><strong>Partisan Animosity</strong> — outparty thermometer coldness (0–100)</td></tr>
+    <tr onclick="showM('m_ap')" style="background:rgba(26,58,92,.03)"><td>Context</td><td colspan="2"><em>Affective Polarization</em> — V-DEM v2cacamps (Study 3)</td></tr>
+    <tr onclick="showM('m_med')"><td>Mediator</td><td colspan="2">Blatant Dehumanization — Ascent of Man + 8-item battery</td></tr>
+    <tr onclick="showM('m_dv')"><td>DV</td><td colspan="2">SPV Battery (Kalmoe &amp; Mason, 2022) + Shooting Vignette</td></tr>
+    <tr onclick="showM('m_cv')"><td>Controls</td><td colspan="2">NFC, SDO, PSID, Extremity, Age (raw), Party, demographics</td></tr>
+  </table>
+
+
+  <div class="sh red">Quick Question</div>
+  <div class="qz-wrap">
+    <div class="qz-q">Partisan animosity differs from affective polarization because it measures…</div>
+    <div class="qz-opt" onclick="pickQ('a','a','b')"><span class="qk">○</span>Inparty warmth minus outparty coldness (the spread)</div>
+    <div class="qz-opt" onclick="pickQ('a','b','b')"><span class="qk">○</span>Outparty coldness only — one pole of the spread</div>
+    <div class="qz-opt" onclick="pickQ('a','c','b')"><span class="qk">○</span>The motivation to vote against the other party</div>
+    <div class="qz-opt" onclick="pickQ('a','d','b')"><span class="qk">○</span>The same construct — terms are interchangeable</div>
+    <div class="qz-fb" id="qfb-a"></div>
+    <div class="qz-nav">
+      <button class="qz-reset" onclick="resetAllQ()">↺ Reset Questions</button>
+    </div>
+  </div>
+
+</div><!-- /col 1 -->
+
+<!-- ═══ COLUMN 2: Study 1 cont. + Study 2 ═══ -->
+<div class="col">
+
+  <div class="sh blue cont">Study 1 cont. — Results</div>
+  <table class="mtbl">
+    <tr><th>Pathway</th><th>k</th><th>N</th><th>r</th><th>CI</th><th>I²</th></tr>
+    <tr onclick="showM('ma_a')"><td>Animosity/Pol.→Dehum. (a)</td><td>12</td><td>8,143</td><td><span class="r-val">.454</span></td><td style="font-size:9px">[.396,.508]</td><td>90%</td></tr>
+    <tr onclick="showM('ma_b')"><td>Dehum.→Violence (b)</td><td>15</td><td>137,532</td><td><span class="r-val">.339</span></td><td style="font-size:9px">[.308,.369]</td><td>79%</td></tr>
+    <tr onclick="showM('ma_c')"><td>Animosity→Violence (c)</td><td>9</td><td>9,640</td><td style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--gold)">.130</td><td style="font-size:9px">[.070,.188]</td><td>88%</td></tr>
+    <tr class="g-row" onclick="showM('ma_ind')"><td colspan="3"><strong>Indirect a×b</strong></td><td colspan="3"><strong>.154 &gt; c (.130) ✓</strong></td></tr>
+  </table>
+  <div class="chips">
+    <span class="chip r" onclick="showM('c_i2')">High I² — why expected</span>
+    <span class="chip b" onclick="showM('c_egger')">Egger's bias test</span>
+    <span class="chip g" onclick="showM('c_estype')">Mixed es_types</span>
+    <span class="chip r" onclick="showM('c_dep')">Residual dependence</span>
+  </div>
+
+  <div class="sh blue">Literature Insights</div>
+  <div class="sr" onclick="showM('ev1')"><span class="sr-lbl">Republicans: animosity → violence endorsement</span><span class="sr-val">+18% ↑</span></div>
+  <div class="sr" onclick="showM('ev2')"><span class="sr-lbl">Democrats: same pathway</span><span class="sr-val blue">+8% ↑</span></div>
+  <div class="sr" onclick="showM('ev3')"><span class="sr-lbl">Petsko et al. (2025) meta: dehum→harm</span><span class="sr-val">k=120, N=128k</span></div>
+  <div class="sr" onclick="showM('ev4')"><span class="sr-lbl">Both parties: dehumanization rates</span><span class="sr-val gold">≈ Symmetric</span></div>
+
+  <div class="sh blue">Study 1 — Takeaway</div>
+  <p class="body">Across dozens of independent studies, the indirect path from partisan hostility through dehumanization to violence is consistently <em>stronger</em> than the direct hostility-to-violence path. The literature as a whole points toward dehumanization as the critical link — hatred alone does not reliably produce violence endorsement.</p>
+
+  <div class="sh blue">Study 2 — Dehumanization as Mediator</div>
+  <p class="body" style="margin-bottom:4px">IV = partisan animosity (outparty thermometer coldness, 0–100). U.S. only, 2018–2020.</p>
+  <div class="fig" onclick="openFig('f_supp')">
+    <canvas id="c_supp" height="145"></canvas>
+    <div class="fig-cap">Fig. 2 — Suppressor mediation path coefficients (N=2,003).</div>
+  </div>
+
+  <div class="xpd" onclick="toggleX(this)" style="border-left-color:var(--cr)">
+    <div class="xpd-hd red">▸ Central Implication for Intervention</div>
+    <div class="xpd-prev">Reducing hatred alone may not be enough — dehumanization must be directly addressed.</div>
+    <div class="xpd-body">
+      <p>The suppressor structure means programs that reduce partisan <em>animosity</em> broadly — cross-partisan contact, media literacy, depolarization campaigns — may not interrupt the violence pathway if they leave dehumanizing cognitive representations intact. The psychological lever is the specific step of perceiving outpartisans as less than fully human. Reducing contempt without restoring recognition of full humanity may leave the violence-enabling mechanism untouched. The intervention target is dehumanization specifically, not hostility generally.</p>
+    </div>
+  </div>
+
+  <div class="xpd" onclick="toggleX(this)" style="border-left-color:var(--gold)">
+    <div class="xpd-hd" style="color:var(--gold)">▸ Scope &amp; Limitations</div>
+    <div class="xpd-prev">U.S.-specific, correlational, 2018–2020 — generalization requires caution.</div>
+    <div class="xpd-body">
+      <p><strong>Study 2</strong> is U.S.-only data collected 2018–2020. All individual-level findings are correlational; causal claims depend on theoretical priors, not experimental manipulation. The SDO asymmetry is an observed correlation, not a demonstrated mechanism. <strong>Study 1</strong> mixes effect size types across studies (r, β, d); pooled estimates are heuristic. <strong>Study 3</strong> uses observational panel data; reverse causation (violence driving polarization) cannot be ruled out. SEs are approximate — country-clustered standard errors would be larger.</p>
+    </div>
+  </div>
+
+
+  <div class="sh red">Quick Question</div>
+  <div class="qz-wrap">
+    <div class="qz-q">The meta-analytic indirect effect (a×b = .154) exceeding the total c-path (.130) means…</div>
+    <div class="qz-opt" onclick="pickQ('b','a','c')"><span class="qk">○</span>The mediation is statistically spurious — an artifact of mixed effect sizes</div>
+    <div class="qz-opt" onclick="pickQ('b','b','c')"><span class="qk">○</span>Animosity directly causes violence more than previously thought</div>
+    <div class="qz-opt" onclick="pickQ('b','c','c')"><span class="qk">○</span>The dehumanization route carries more violence risk than hostility alone — suppressor structure</div>
+    <div class="qz-opt" onclick="pickQ('b','d','c')"><span class="qk">○</span>The two pathways are equivalent — no mediation is occurring</div>
+    <div class="qz-fb" id="qfb-b"></div>
+  </div>
+
+</div><!-- /col 2 -->
+
+<!-- ═══ COLUMN 3: Study 2 cont. + H₂ Asymmetry ═══ -->
+<div class="col">
+
+  <div class="sh blue cont">Study 2 cont. — Results</div>
+  <table class="ptbl" style="margin-top:4px">
+    <tr><th>Path</th><th>β</th><th>95% CI</th><th>Sobel</th></tr>
+    <tr onclick="showM('pa')"><td>a: Animosity → Dehum.</td><td class="pos">+.535</td><td>—</td><td>—</td></tr>
+    <tr onclick="showM('pb')"><td>b: Dehum. → SPV | Anim.</td><td class="pos">+.159</td><td>—</td><td>—</td></tr>
+    <tr onclick="showM('pc')"><td>c: Total Animosity → SPV</td><td class="nzr">−.050</td><td>—</td><td>—</td></tr>
+    <tr onclick="showM('pcp')"><td>c′: Direct Animosity → SPV</td><td class="neg">−.135</td><td>—</td><td>—</td></tr>
+    <tr class="hi" onclick="showM('ind1')"><td><strong>Indirect (a×b) SPV</strong></td><td class="pos"><strong>+.085</strong></td><td>[.057,.111]</td><td>z=6.48</td></tr>
+    <tr class="hi" onclick="showM('ind2')"><td><strong>Indirect (a×b) Shoot.</strong></td><td class="pos"><strong>+.062</strong></td><td>[.034,.092]</td><td>z=4.61</td></tr>
+  </table>
+  <div class="suppress" style="margin-top:4px">Suppressor: animosity alone → no positive violence signal. Dehumanization IS the pathway.</div>
+  <div class="chips" style="margin-top:4px">
+    <span class="chip r" onclick="showM('rob12')">12/12 DVs (within-study robustness)</span>
+    <span class="chip b" onclick="showM('rob_boot')">2,000 paired resamples</span>
+    <span class="chip g" onclick="showM('rob_sobel')">Sobel z = 6.48</span>
+  </div>
+
+  <div class="sh blue">Study 2 — Takeaway</div>
+  <p class="body">Hating the other side does not directly cause people to endorse violence — but it does cause them to see the other side as less than human. That dehumanization is what produces the violence endorsement. Remove the dehumanization step and the link from hatred to violence essentially disappears.</p>
+
+  <div class="sh blue">Partisan Asymmetry (H₂)</div>
+  <p class="body" style="margin-bottom:4px">Party dropped from within-party models (constant → collinear → not identified). Asymmetry is entirely in path b — not in the rate of dehumanization generated.</p>
+  <div class="party-grid">
+    <div class="pc dem"><div class="pc-party dem">Democrats</div><div class="pc-val dem">.056</div><div class="pc-sub">n = 1,067<br>CI [.022, .090]</div></div>
+    <div class="pc rep"><div class="pc-party rep">Republicans</div><div class="pc-val rep">.120</div><div class="pc-sub">n = 936<br>CI [.077, .168]</div></div>
+  </div>
+  <div class="delta-box" onclick="showM('delta')">
+    <div class="delta-lbl">Bootstrapped Δβ (Rep − Dem) — click for detail</div>
+    <div class="delta-val">+.064, 95% CI [+.013, +.118] ✓</div>
+  </div>
+  <div class="fig" onclick="openFig('f_asym')">
+    <canvas id="c_asym" height="145"></canvas>
+    <div class="fig-cap">Fig. 3 — Path comparison by party. a-paths ≈ equal; b-paths diverge 2×.</div>
+  </div>
+  <div class="sr" onclick="showM('sdo')"><span class="sr-lbl">SDO×Dehum: Republicans</span><span class="sr-val">r = .253</span></div>
+  <div class="sr" onclick="showM('sdo')"><span class="sr-lbl">SDO×Dehum: Democrats</span><span class="sr-val blue">r = −.020</span></div>
+
+
+  <div class="sh red">Quick Question</div>
+  <div class="qz-wrap">
+    <div class="qz-q">When dehumanization is controlled, what happens to animosity's direct effect on violence?</div>
+    <div class="qz-opt" onclick="pickQ('c','a','b')"><span class="qk">○</span>Increases — more variance explained</div>
+    <div class="qz-opt" onclick="pickQ('c','b','b')"><span class="qk">○</span>Becomes negative (β = −.135) — suppressor signature</div>
+    <div class="qz-opt" onclick="pickQ('c','c','b')"><span class="qk">○</span>Weakens but stays positive — partial mediation</div>
+    <div class="qz-opt" onclick="pickQ('c','d','b')"><span class="qk">○</span>Drops to exactly zero — full mediation</div>
+    <div class="qz-fb" id="qfb-c"></div>
+  </div>
+</div><!-- /col 3 -->
+
+<!-- ═══ COLUMN 4: Study 3 + Timeline + Convergence + Quiz ═══ -->
+<div class="col">
+
+  <div class="sh gold">Study 3 — Global Implications</div>
+  <p class="body" style="margin-bottom:4px">118 democracies (v2x_regime ≥ 2), 1950–2025. Extends Piazza (2023). V-DEM v2cacamps ≈ affective polarization at macro level.</p>
+  <table class="vtbl">
+    <tr><th>Model</th><th>Spec.</th><th>β</th><th>p</th></tr>
+    <tr onclick="showM('m1')"><td>M1</td><td>Pooled OLS</td><td style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--cr)">.340</td><td>&lt;.001</td></tr>
+    <tr onclick="showM('m2')"><td>M2</td><td>Country FE</td><td style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--cr)">.308</td><td>&lt;.001</td></tr>
+    <tr onclick="showM('m3')"><td>M3</td><td>Two-way FE</td><td style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--cr)">.317</td><td>&lt;.001</td></tr>
+    <tr onclick="showM('m4')"><td>M4</td><td>Lagged (t−1)</td><td style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--cr)">.302</td><td>&lt;.001</td></tr>
+    <tr class="logit" onclick="showM('m5')"><td>M5†</td><td>Ordinal logit</td><td style="font-family:var(--mono);font-size:10px;color:var(--gold)">.773</td><td>&lt;.001</td></tr>
+  </table>
+  <p style="font-family:var(--mono);font-size:8px;color:var(--ink-l);margin:2px 0 3px">†M5 log-odds — not comparable to OLS β. OLS range: .302–.340.</p>
+
+  <div class="sh gold">Study 3 — Takeaway</div>
+  <p class="body">Across 118 democracies over 75 years, countries that become more politically polarized reliably see more political violence — regardless of region, era, or regime type. The United States has sat at the maximum recorded polarization for approximately 8 years; these global results externally validate the study and warn us that understanding how animosity becomes violence couldn't be more relevant.</p>
+
+  <div class="fig" onclick="openFig('f_vdem')">
+    <canvas id="c_vdem" height="145"></canvas>
+    <div class="fig-cap">Fig. 4 — Polarization predicts violence globally (118 democracies).</div>
+  </div>
+
+  <div class="sh" style="margin-top:2px">U.S. Trajectory — Drag to Explore</div>
+  <input type="range" class="tl-slider" id="tl" min="0" max="7" value="6" oninput="updateTL(this.value)">
+  <div class="tl-cards" id="tl-cards"></div>
+
+  <div class="conv-box">
+    <div class="conv-title">What This Research Tells Us</div>
+    <div class="conv-row"><span class="conv-marker">I</span><span class="conv-txt">Decades of research confirm that dehumanization sits between partisan hatred and violence — the indirect pathway consistently outweighs the direct one across 37 independent effect sizes.</span></div>
+    <div class="conv-row"><span class="conv-marker">II</span><span class="conv-txt">In a U.S. sample of 2,003 respondents, dehumanization fully explains the hatred–violence link. The effect holds across 12 different measures of violence endorsement and is roughly twice as strong among Republicans.</span></div>
+    <div class="conv-row"><span class="conv-marker">III</span><span class="conv-txt">Globally, polarization predicts political violence across 118 democracies over 75 years — and the U.S. has never been more polarized.</span></div>
+  </div>
+
+  
+  <div class="sh red">Quick Question</div>
+  <div class="qz-wrap">
+    <div class="qz-q">Across all three studies, what is the single most important intervention target to reduce partisan violence?</div>
+    <div class="qz-opt" onclick="pickQ('d','a','c')"><span class="qk">○</span>Reducing partisan animosity and outparty hostility directly</div>
+    <div class="qz-opt" onclick="pickQ('d','b','c')"><span class="qk">○</span>Reducing overall political polarization at the societal level</div>
+    <div class="qz-opt" onclick="pickQ('d','c','c')"><span class="qk">○</span>Targeting dehumanizing perceptions of the outparty specifically</div>
+    <div class="qz-opt" onclick="pickQ('d','d','c')"><span class="qk">○</span>Focusing on Social Dominance Orientation as the root cause</div>
+    <div class="qz-fb" id="qfb-d"></div>
+  </div>
+</div><!-- /col 4 -->
+
+</div><!-- /cols -->
+
+
+<footer class="ft">
+  <span class="ft-txt">Faraher (2026) — Partisan Animosity, Dehumanization, and Political Violence · IMP Final Project</span>
+  <span class="ft-mono">Individualized B.A. Philosophy, Political Science, and Economics</span>
+  <span class="ft-txt">nfaraher@iu.edu · Advisor: A. Craiutu · Indiana University</span>
+</footer>
+</div>
+
+<div id="tt"></div>
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeM()">
+  <div class="modal" id="modal">
+    <button class="modal-x" onclick="closeM()">×</button>
+    <div class="modal-title" id="mt"></div>
+    <div class="modal-meta" id="mm"></div>
+    <div class="modal-body" id="mb"></div>
+    <div class="modal-canvas-wrap" id="mc" style="display:none"><canvas id="modal-canvas" style="max-height:340px"></canvas></div>
+  </div>
+</div>
+
+<script>
+// ── CONSTRUCT SELECTOR ──
+const csData={
+  anim:'<em>Partisan animosity</em> = outparty feeling thermometer coldness (0–100). The focal IV in Study 2. One pole of affective polarization; downstream product of negative partisanship. Directly measured in Landry (2024). Not the full AP spread.',
+  ap:'<em>Affective polarization</em> = inparty warmth minus outparty coldness. The spread or gap. Dominant population-level measure (Iyengar et al., 2012). What V-DEM v2cacamps most closely captures in Study 3.',
+  np:'<em>Negative partisanship</em> (Abramowitz &amp; Webster, 2016) = structural/motivational upstream condition. Partisan identity organized around opposition rather than positive attachment. Webster (2020) <em>American Rage</em>: anger from this erodes democratic norms; elites sustain it for electoral loyalty.',
+  dh:'<em>Outgroup dehumanization</em> (Mediator) = perceiving outpartisans as less than fully human. Measured via Kteily et al. (2015) Ascent of Man scale (0–100) plus 8-item animalistic trait battery, z-scored composite. Bruneau et al. (2018) neuroimaging: activates distinct neural pathways from mere negative affect.',
+  pv:'<em>Political violence support</em> (DV) = attitudinal endorsement of partisan violence. SPV battery (Kalmoe &amp; Mason, 2022): 4 items, 0–100. Shooting vignette: concrete behavioral scenario (1–7 Likert). Study 3 uses V-DEM v2caviol (0–4): actual violence incidents coded by country experts.'
+};
+function setCS(btn,key){document.querySelectorAll('.cs-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('cs-text').innerHTML=csData[key]}
+
+// ── EXPANDABLE ──
+function toggleX(el){const b=el.querySelector('.xpd-body');if(b)b.classList.toggle('open')}
+
+// ── TIMELINE ──
+const TL=[
+  {yr:'1950s',pol:1.0,viol:2.0,note:'Cold War baseline'},
+  {yr:'1970s',pol:1.3,viol:1.4,note:'Post-60s stabilization'},
+  {yr:'1980s',pol:1.1,viol:1.0,note:'Relative calm'},
+  {yr:'1990s',pol:1.8,viol:1.0,note:'Polarization begins rising'},
+  {yr:'2000s',pol:2.0,viol:1.0,note:'Steady rise; violence low'},
+  {yr:'2010s',pol:3.3,viol:1.0,note:'Rapid climb; Tea Party, Obama era'},
+  {yr:'2017–19',pol:4.0,viol:1.0,note:'Maximum V-DEM polarization reached'},
+  {yr:'2020+',pol:4.0,viol:2.0,note:'Violence elevated — Jan. 6, armed confrontations. U.S. paradigm case.'},
+];
+function updateTL(v){
+  const d=TL[parseInt(v)],pp=(d.pol/4)*100,vp=(d.viol/4)*100,hi=d.pol>=4||d.viol>=2;
+  document.getElementById('tl-cards').innerHTML=`
+    <div class="tl-card${hi?' hi':''}"><div class="tl-yr">${d.yr}</div><div class="tl-val">${d.pol.toFixed(1)}</div><div class="tl-lbl">Polarization</div><div class="tl-bar-wrap"><div class="tl-bar" style="width:${pp}%;background:var(--cr)"></div></div></div>
+    <div class="tl-card${hi?' hi':''}"><div class="tl-yr">${d.yr}</div><div class="tl-val blue">${d.viol.toFixed(1)}</div><div class="tl-lbl">Violence</div><div class="tl-bar-wrap"><div class="tl-bar" style="width:${vp}%;background:var(--bl)"></div></div></div>
+    <div class="tl-card"><div class="tl-yr">Note</div><div class="tl-note">${d.note}</div></div>`;
+}
+updateTL(6);
+
+// ── QUIZ ──
+const QD={
+  a:{correct:'b',fb:{
+    b:{t:'✓ Correct. Partisan animosity = outparty coldness only (0–100). Affective polarization = inparty warmth minus outparty coldness — the full spread. Study 2 uses the outparty pole specifically.',cls:'good'},
+    a:{t:"Incorrect. That's affective polarization (the full spread). Partisan animosity is only the outparty pole.",cls:'bad'},
+    c:{t:"Incorrect. That's closer to negative partisanship — a structural/motivational orientation, not a thermometer measurement.",cls:'bad'},
+    d:{t:'Incorrect. They are distinct constructs. Conflating them is a key problem this paper addresses.',cls:'bad'}}},
+  b:{correct:'c',fb:{
+    c:{t:'✓ Correct. When the indirect path (through dehumanization) exceeds the total direct path, dehumanization is doing more work than hostility alone — the suppressor structure. Hostility without dehumanization carries little violence risk.',cls:'good'},
+    a:{t:'Incorrect. The indirect exceeding the direct is not spurious — it is the theoretically predicted suppressor pattern.',cls:'bad'},
+    b:{t:'Incorrect. The finding shows the opposite: direct animosity is a near-zero or negative predictor once dehumanization is accounted for.',cls:'bad'},
+    d:{t:'Incorrect. Indirect > direct is the hallmark of suppressor mediation, not equivalence.',cls:'bad'}}},
+  c:{correct:'b',fb:{
+    b:{t:'✓ Correct. c′ = −.135 — it becomes negative. The positive indirect (+.085) and negative direct (−.135) sum to the near-zero total (−.050). Dehumanization is the active ingredient.',cls:'good'},
+    a:{t:"Incorrect. Controlling for dehumanization, animosity's direct effect becomes negative — it does not increase.",cls:'bad'},
+    c:{t:'Incorrect. This describes partial mediation. Here the direct path flips sign — a more extreme pattern.',cls:'bad'},
+    d:{t:'Close — but c′ = −.135, which is negative, not zero. Full mediation would give c′ = 0.',cls:'bad'}}},
+  d:{correct:'c',fb:{
+    c:{t:'✓ Correct. All three studies converge here: the indirect path through dehumanization drives violence endorsement. Reducing hostility alone does not break the chain — dehumanizing perceptions must be directly addressed.',cls:'good'},
+    a:{t:"Incorrect. The suppressor structure shows hostility alone carries no positive violence signal. Reducing animosity without targeting dehumanization leaves the mechanism intact.",cls:'bad'},
+    b:{t:'Partially — macro-level polarization correlates with violence globally. But the individual-level mechanism is dehumanization, making it the more precise intervention lever.',cls:'bad'},
+    d:{t:'Incorrect. SDO is an observed correlate, not a demonstrated causal mechanism. Dehumanization is the confirmed mediator across all three studies.',cls:'bad'}}}
+};
+function resetSlide(id){
+  const fb=document.getElementById('qfb-'+id);
+  if(!fb)return;
+  const wrap=fb.closest('.qz-wrap');
+  if(!wrap)return;
+  wrap.querySelectorAll('.qz-opt').forEach(o=>{o.style.pointerEvents='';o.classList.remove('correct','wrong');o.querySelector('.qk').textContent='○'});
+  fb.className='qz-fb';fb.textContent='';
+}
+function pickQ(qId,choice,correct){
+  const fb=document.getElementById('qfb-'+qId);
+  if(!fb)return;
+  const wrap=fb.closest('.qz-wrap');
+  wrap.querySelectorAll('.qz-opt').forEach((o,i)=>{
+    o.style.pointerEvents='none';
+    const l='abcd'[i];
+    if(l===correct)o.classList.add('correct');
+    else if(l===choice&&choice!==correct)o.classList.add('wrong');
+    o.querySelector('.qk').textContent=l===correct?'✓':(l===choice?'✗':'○');
+  });
+  const d=QD[qId].fb[choice];
+  fb.textContent=d.t;fb.className='qz-fb show '+d.cls;
+}
+function resetAllQ(){['a','b','c','d'].forEach(id=>resetSlide(id));}
+function resetQ(){resetAllQ();}
+
+// ── MODAL DATA ──
+const MD={
+  neg_part:{t:'Negative Partisanship (Upstream Structural Condition)',m:'Abramowitz & Webster (2016, 2018) · Webster (2020) American Rage',cls:'blue',b:'<p>Partisan identity organized around opposition to the outparty rather than positive attachment to one\'s own. Webster\'s (2020) <em>American Rage</em> demonstrated experimentally that the anger at the core of this orientation causally reduces institutional trust, weakens democratic norm commitment, and increases party loyalty. Elites have incentive to sustain this anger — angry voters vote straight-ticket.</p><p><strong>Role in this paper:</strong> Upstream structural context only. Not directly measured in Study 2. Explains why partisan animosity is so intense in the contemporary U.S. context.</p>'},
+  aff_pol:{t:'Affective Polarization (Emotional Spread)',m:'Iyengar, Sood & Lelkes (2012) · Mason (2018)',cls:'blue',b:'<p>Affective polarization = inparty warmth minus outparty coldness on 0–100 feeling thermometers. A <em>spread</em> measure capturing both elevated ingroup affection AND elevated outgroup hostility as a composite.</p><p><strong>Distinguished from partisan animosity:</strong> AP is the full spread. Partisan animosity (Study 2 IV) is only the outparty pole. Using outparty coldness specifically focuses the causal claim on hostility toward <em>them</em>.</p><p><strong>In Study 3:</strong> V-DEM v2cacamps captures mass and elite partisan camp formation — conceptually closest to the full AP construct.</p>'},
+  pn_anim:{t:'Partisan Animosity — Focal IV',m:'Landry et al. (2024) · Outparty feeling thermometer coldness (0–100)',cls:'',b:'<p>Operationalized as outparty feeling thermometer coldness. Not the full AP spread — that requires inparty minus outparty. Higher values = more intense hostility toward the outparty.</p><p><strong>Why this and not full AP?</strong> (1) Directly measured in the Landry dataset. (2) Most theoretically proximate antecedent to dehumanization — you dehumanize the outparty specifically. (3) Focuses the causal chain on outparty-directed hostility.</p><p><strong>Limitation:</strong> Two respondents with identical outparty coldness but different inparty warmth are treated equivalently. Future work should test whether the full AP spread produces different mediation results.</p>'},
+  pn_med:{t:'Outgroup Dehumanization — Mediator',m:'Kteily et al. (2015) JPSP · Ascent of Man + 8-item trait battery',cls:'',b:'<p><strong>Ascent of Man (0–100):</strong> Rate where "the average opposing partisan" falls on an ape-to-modern-human progression. Intentionally blatant.</p><p><strong>8-item trait battery:</strong> "savage," "barbaric," "primitive," "uncivilized," "animal-like" — each rated 1–7.</p><p>Both z-scored and averaged into a standardized composite.</p><p><strong>Bruneau et al. (2018) neuroimaging:</strong> Activates distinct brain structures from feeling thermometers — qualitatively different from negative affect, not just extreme dislike. This is why it functions as a mediator, not merely a correlate.</p>'},
+  pn_dv:{t:'Support for Political Violence (DV)',m:'Kalmoe & Mason (2022) SPV Battery + Shooting Vignette',cls:'',b:'<p>SPV battery: 4 items measuring how justified it is for one\'s own party to use violence. Rescaled 0–100. α > .85 across 9 surveys.</p><p><strong>Shooting vignette (1–7):</strong> Concrete behavioral scenario addressing Westwood et al. (2022) concerns that abstract items inflate apparent support. Both DVs show significant mediation effects.</p>'},
+  h1:{t:'H₁: Dehumanization Mediates Animosity → Violence',m:'Bootstrapped mediation · Preacher & Hayes (2008) · N=2,003',cls:'',b:'<p>H1 predicts that the indirect effect of partisan animosity on violence through dehumanization is statistically significant (bootstrap CI excludes zero).</p><p><strong>Result:</strong> Indirect β = +.085, 95% CI [+.057, +.111]. Sobel z = 6.48, p &lt; .001. H1 supported.</p><p><strong>Suppressor prediction confirmed:</strong> c′ = −.135 (negative). Partisan animosity alone carries no positive violence signal; routing through dehumanization creates it.</p><p><strong>Scope:</strong> U.S.-specific findings from data collected 2018–2020.</p>'},
+  h2:{t:'H₂: Stronger Mediated Pathway Among Republicans',m:'Bootstrapped subgroup comparison · Corrected identification',cls:'blue',b:'<p><strong>Result:</strong> Δβ = +.064, 95% CI [+.013, +.118] — zero excluded. H2 supported.</p><p><strong>Methodological note:</strong> Party was dropped from within-party subgroup models where it is constant → collinear with intercept → not identified. Corrected Δβ = +.064.</p><p><strong>Mechanism:</strong> SDO correlates with dehumanization at r = .253 (Republicans) vs r = −.020 (Democrats). Consistent with hierarchy-affirming psychology amplifying the b-path — but this is an observed correlation, not a demonstrated causal mechanism.</p>'},
+  ev1:{t:'+18% — Republicans: Aversion → Violence',m:'Piazza (2023) · Security Studies 32(3) · N = 1,899',cls:'',b:'<p>Republicans who expressed strong partisan aversion toward Democrats were 18 percentage points more likely to endorse political violence, controlling for ideological extremity, demographics, and SDO. This asymmetry motivated H2.</p>'},
+  ev2:{t:'+8% — Democrats: Aversion → Violence',m:'Piazza (2023) · Security Studies 32(3)',cls:'blue',b:'<p>Democrats showed a smaller but significant +8% increase. The present study tests whether the dehumanization pathway specifically is stronger for Republicans — which would explain Piazza\'s asymmetric total effects.</p>'},
+  ev3:{t:'Petsko et al. (2025): Dehumanization Uniquely Predicts Harm',m:'Journal of Personality and Social Psychology · k=120, N=128,022',cls:'',b:'<p>Largest meta-analytic synthesis of the dehumanization–harm relationship. Across 120 studies, dehumanization showed a unique relationship with violence support above and beyond simple dislike, prejudice, or threat. Pooled r = .31. Provides the b-path anchor in Study 1.</p>'},
+  ev4:{t:'Symmetric Dehumanization Rates (Both Parties)',m:'Martherus et al. (2021) · Political Behavior 43(2) · Three surveys',cls:'gold',b:'<p>Both parties dehumanize their outpartisans at roughly similar rates across three broadly representative surveys. The partisan asymmetry is NOT about differential dehumanization rates (Study 2 a-paths: .517 vs .554 — not significantly different). The asymmetry is in what dehumanization <em>does once generated</em>: Republicans convert it to violence endorsement at 2× the rate.</p>'},
+  ma_a:{t:'a-path: r = .454 [.396, .508], k=12',m:'Corrected: per-study r values verified from raw data files',cls:'',b:'<p><strong>Correction applied:</strong> Prior database had incorrect per-study r values (not traceable to raw data). Corrected values computed directly from Landry data files: S1=.4643, S2=.5846, S3=.5664. Landry pooled row removed (dependent on S1–S3).</p><p><strong>Heterogeneity (I²=90%):</strong> Expected given that source studies operationalize the IV differently — outparty coldness vs. full AP spread vs. partisan identity intensity.</p>'},
+  ma_b:{t:'b-path: r = .339 [.308, .369], k=15',m:'Anchored by Petsko et al. (2025), k=120, N=128,022',cls:'',b:'<p>Anchored by the Petsko et al. (2025) large-k meta-analysis, protecting against Egger\'s test publication bias concerns. Moderator: b-path is larger in intergroup/conflict contexts (r≈.39) than in U.S. partisan contexts (r≈.25).</p>'},
+  ma_c:{t:'c-path: r = .130 [.070, .188], k=9',m:'Near-zero total effect — theoretically predicted',cls:'gold',b:'<p>The near-zero c-path is not a null finding — it is the theoretically expected pattern of suppressor mediation. Piazza party-split rows replaced with a single pooled row (same N=1,899 sample, not independent studies).</p>'},
+  ma_ind:{t:'Meta-Analytic Indirect: a×b = .154 > c = .130',m:'Heuristic comparison — approximate synthesis',cls:'grn',b:'<p>The indirect product (.454 × .339 = .154) exceeds the total c-path (.130) — literature-level structural signature consistent with suppressor mediation. <strong>Caveat:</strong> Heuristic comparison given mixed effect size types and residual Landry within-team dependence. Supports but does not substitute for the formal test in Study 2.</p>'},
+  c_i2:{t:'High I² — Why Expected',m:'',cls:'',b:'<p>I² = 87–90% across pathways. Sources of heterogeneity: (1) diverse populations; (2) different IV operationalizations; (3) different dehumanization measures (blatant vs. subtle); (4) different violence operationalizations and contexts. The DL random-effects estimator allows different true effects across studies rather than assuming a single population effect.</p>'},
+  c_egger:{t:"Egger's Test — Publication Bias",m:'',cls:'blue',b:"<p>Potential small-study effects on the a- and b-paths (p < .05). The b-path anchor (Petsko et al., 2025, k=120, N=128,022) provides robustness. The c-path showed no significant Egger's asymmetry.</p>"},
+  c_estype:{t:'Mixed Effect Size Types',m:'',cls:'gold',b:'<p>Includes: raw_pearson_r, beta_approx, d_converted, estimated, and meta_pooled. This mixture is an acknowledged limitation — pooled estimates are heuristic approximations. Each row\'s es_type is documented in meta_effect_sizes_corrected.csv.</p>'},
+  c_dep:{t:'Residual Within-Team Dependence',m:'',cls:'',b:'<p>Landry S1, S2, S3 share investigators, design, and populations. The pooled row was removed, but the three studies are not fully independent. Proper modeling requires three-level meta-analysis or robust variance estimation. SE estimates are approximate.</p>'},
+  pa:{t:'Path a: Animosity → Dehumanization',m:'β = +.535, p < .001',cls:'',b:'<p>Both parties convert animosity into dehumanization at near-identical rates: Democrats β = .517, Republicans β = .554 — a .037 difference that is not statistically significant. Replicates Martherus et al. (2021).</p>'},
+  pb:{t:'Path b: Dehumanization → SPV | Animosity',m:'β = +.159, p < .001 · Asymmetric by party',cls:'',b:'<p>Democrats β = .108, Republicans β = .216. The Republican b-path is approximately double. This is where H2\'s asymmetry lives — not in dehumanization rates but in what dehumanization does once generated.</p>'},
+  pc:{t:'Total c-path: Animosity → SPV',m:'β = −.050, p = .011 · Suppressor signature',cls:'gold',b:'<p>The near-zero and slightly negative total c-path is the theoretically predicted outcome. The bivariate r(Animosity, SPV) = −.028. People can despise the outparty and still not endorse violence, as long as they perceive outpartisans as human. The violence signal emerges only after animosity generates dehumanizing representations.</p>'},
+  pcp:{t:"Direct c′-path: Animosity → SPV | Dehumanization",m:'β = −.135, p < .001 · Negative direct effect',cls:'',b:'<p>Positive indirect (+.085) + negative direct (−.135) ≈ near-zero total (−.050). When dehumanization is held constant, high animosity may reflect engaged partisan citizenship — intense identity that co-occurs with norm adherence. The violence-enabling transformation is dehumanization specifically.</p>'},
+  ind1:{t:'Indirect Effect (a×b), DV = SPV',m:'β = +.085, SE=.014, 95% CI [+.057, +.111], Sobel z=6.48',cls:'grn',b:'<p>2,000 resamples with a <em>single paired index vector</em> per replicate — the same random index applied to all equations simultaneously, preserving each person\'s complete (animosity, dehumanization, violence) triplet. Sobel z = 6.48, p &lt; .0000001 independently confirms. Scope: U.S. only, 2018–2020.</p>'},
+  ind2:{t:'Indirect Effect, DV = Shooting Vignette',m:'β = +.062, 95% CI [+.034, +.092]',cls:'',b:'<p>The shooting vignette provides behavioral specificity, addressing Westwood et al. (2022) concerns about abstract SPV item inflation. Significant indirect effect replicates the SPV finding.</p>'},
+  delta:{t:'Asymmetry Δβ = +.064, 95% CI [.013, .118]',m:'Bootstrapped difference distribution · 2,000 paired resamples',cls:'grn',b:'<p>Run mediation within Democrats (n=1,067) and Republicans (n=936) separately; subtract Democrat bootstrap distribution from Republican bootstrap distribution; CI from percentiles. <strong>Party dropped from subgroup models</strong> (constant → collinear with intercept). Corrected Δβ = +.064 (prior erroneous: +.067).</p>'},
+  sdo:{t:'SDO Diagnostic — Plausible Mechanism',m:'Computed from Landry Study 3 data · Observational',cls:'gold',b:'<p>SDO (Social Dominance Orientation; Pratto et al., 1994) = endorsement of group-based social hierarchy. r(SDO, Dehumanization) = .253 (Republicans), r = −.020 (Democrats). This observed pattern is consistent with hierarchy-affirming psychology amplifying the b-path. <strong>Caveats:</strong> Observational correlation, not demonstrated causal mechanism. 2018–2020 only — temporal stability unknown.</p>'},
+  rob12:{t:'12/12 Violence Operationalizations — Within-Study Robustness',m:'All from Landry (2024) · Same data collection · Shared method variance',cls:'',b:'<p>All 12 available DVs show positive indirect effects with CIs excluding zero: SPV, WEV, Shooting Vignette, Rocks, Arson, Weapon, Murder. <strong>Important:</strong> This is within-study robustness across operationalizations, not independent replication. All measures share method variance from the same data collection.</p>'},
+  rob_boot:{t:'Bootstrap: 2,000 Paired Resamples (Corrected)',m:'Single index vector per replicate · Seed = 42',cls:'blue',b:'<p>A single random index vector per replicate applied to all equations simultaneously — preserving each person\'s complete (animosity, dehumanization, violence) triplet. Corrects a prior error where separate index vectors were drawn, and a V-DEM bootstrap error where two separate vectors broke the country-year pairing.</p>'},
+  rob_sobel:{t:'Sobel Test: z = 6.48, p < .001',m:'Independent parametric verification',cls:'',b:'<p>Computes significance parametrically under normality assumptions — different from the bootstrap. Agreement between both methods strengthens inference. z = 6.48, p &lt; .0000001.</p>'},
+  m_iv:{t:'IV: Partisan Animosity',m:'Outparty feeling thermometer coldness (0–100)',cls:'',b:'<p>Not the full AP spread. Higher = more intense outparty hostility. Mean ≈ 67, SD ≈ 25. Both parties show high animosity; distributions largely overlap. Limitation: variation in inparty warmth is excluded.</p>'},
+  m_ap:{t:'Affective Polarization — Study 3 Context Variable',m:'V-DEM v2cacamps · 0–4 ordinal scale',cls:'blue',b:'<p>V-DEM captures mass and elite partisan camp formation — closer to the full AP construct than to partisan animosity. Study 3 validates the polarization→violence relationship at the macro level; it does not test the dehumanization mediation.</p>'},
+  m_med:{t:'Blatant Dehumanization Composite',m:'Kteily et al. (2015) · Ascent of Man + 8-item trait battery',cls:'',b:'<p>Ascent of Man (0–100) + 8-item trait battery ("savage," "barbaric," etc.), both z-scored and averaged. Bruneau et al. (2018) neuroimaging confirms this activates distinct brain structures from feeling thermometers — qualitatively different from negative affect.</p>'},
+  m_dv:{t:'DV: Support for Partisan Violence',m:'Kalmoe & Mason (2022) · 4-item · α > .85',cls:'',b:'<p>4 items, rescaled 0–100, α > .85 across 9 surveys. Shooting vignette (1–7) addresses Westwood et al. (2022) concern about abstract item inflation. Both show significant mediation.</p>'},
+  m_cv:{t:'Covariates — Matching Landry R Specification',m:'Age raw (NOT z-scored) — verified identical for focal coefficients',cls:'gold',b:'<p>Need for Chaos (NFC) is Landry et al.\'s primary predictor — including it ensures dehumanization mediation is identified above NFC. Age is raw (not z-scored), matching the Landry R Markdown specification exactly. Audit confirmed focal coefficients are identical under both Age standardizations.</p>'},
+  m1:{t:'M1: Pooled OLS · β = .340',m:'N = 4,465, R² = .163',cls:'',b:'<p>Baseline pooled OLS. Polarization accounts for 16% of variance in violence. Caveat: ignores country fixed effects. M2–M4 exploit within-country variation.</p>'},
+  m2:{t:'M2: Country Fixed Effects · β = .308',m:'Within-country estimator (demeaned OLS)',cls:'',b:'<p>Absorbs all time-invariant country characteristics. β = .308 identified from within-country variation: when a country becomes more polarized, does violence subsequently rise? Yes. SEs approximate (no country-clustered correction).</p>'},
+  m3:{t:'M3: Two-Way Fixed Effects · β = .317',m:'Country + year fixed effects',cls:'',b:'<p>β = .317 ≈ M2 (.308), confirming the relationship is not driven by global time trends — a genuine within-country, within-period phenomenon.</p>'},
+  m4:{t:'M4: Lagged Polarization (t−1) · β = .302',m:'Country FE · Temporal ordering test',cls:'',b:'<p>Polarization at t−1 predicts violence at t, within countries — consistent with a causal directional account. Endogeneity cannot be fully ruled out with observational panel data.</p>'},
+  m5:{t:'M5: Ordinal Logit · coef = .773 †',m:'Log-odds scale — NOT comparable to OLS β',cls:'gold',b:'<p>Treats the 0–4 violence variable as ordered categorical. Coefficient = 0.773 in log-odds. <strong>Critical:</strong> NOT comparable to OLS β (.302–.340). A prior version incorrectly included M5 in the OLS β range — corrected here.</p>'},
+};
+let modalChart=null;
+function showM(key){
+  const d=MD[key];if(!d)return;
+  document.getElementById('mt').textContent=d.t;
+  document.getElementById('mm').textContent=d.m;
+  document.getElementById('mb').innerHTML=d.b;
+  document.getElementById('modal').className='modal '+(d.cls||'');
+  document.getElementById('mc').style.display='none';
+  if(modalChart){modalChart.destroy();modalChart=null}
+  document.getElementById('overlay').classList.add('show');
+}
+function closeM(){document.getElementById('overlay').classList.remove('show')}
+
+// ── CHART FIGS ──
+const FD={
+  f_meta:{t:'Fig. 1 — Corrected Meta-Analytic Effect Sizes (k=37)',cap:'Pooled r by pathway. a×b=.154 > c=.130. Heuristic synthesis — mixed es_types.',fn:bldMeta},
+  f_supp:{t:'Fig. 2 — Suppressor Mediation Path Coefficients (N=2,003)',cap:'Indirect β=+.085 [.057,.111], Sobel z=6.48. U.S. only, 2018–2020.',fn:bldSupp},
+  f_asym:{t:'Fig. 3 — Path Comparison by Party',cap:'a-paths ≈ equal; b-paths diverge 2×. That IS H₂.',fn:bldAsym},
+  f_vdem:{t:'Fig. 4 — Polarization Predicts Violence (118 Democracies)',cap:'V-DEM v16, 1950–2025. OLS β range: .302–.340. Descriptive.',fn:bldVdem},
+};
+function openFig(key){
+  const d=FD[key];if(!d)return;
+  document.getElementById('mt').textContent=d.t;
+  document.getElementById('mm').textContent=d.cap;
+  document.getElementById('mb').innerHTML='';
+  document.getElementById('modal').className='modal';
+  const mc=document.getElementById('mc');mc.style.display='block';
+  mc.innerHTML='<canvas id="modal-canvas" style="max-height:360px"></canvas>';
+  if(modalChart){modalChart.destroy();modalChart=null}
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(()=>{modalChart=d.fn('modal-canvas',true)},60);
+}
+
+// ── CHARTS ──
+const acc='#7D1820',acc2='#1A3A5C',gld='#9A6F20',grn='#1A5C2A',mut='#6B5030';
+const fnt={family:"'JetBrains Mono',monospace",size:9};
+const fntLg={family:"'JetBrains Mono',monospace",size:10};
+const fntTitle={family:"'JetBrains Mono',monospace",size:9,weight:'600'};
+const base={responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{font:fnt,color:mut}}},scales:{x:{ticks:{font:fnt,color:mut},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:fnt,color:mut},grid:{color:'rgba(0,0,0,.05)'}}}};
+
+function bldMeta(id,big){
+  const el=document.getElementById(id);if(!el)return;const ex=Chart.getChart(el);if(ex)ex.destroy();
+  return new Chart(el,{type:'bar',data:{labels:['a: Anim/Pol→Dehum','b: Dehum→Violence','c: Anim→Violence','a×b (indirect)'],datasets:[{label:'r',data:[.454,.339,.130,.154],backgroundColor:[acc2,acc,gld,grn],borderRadius:3,borderSkipped:false}]},
+    options:{...base,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const ci=[' [.396,.508]',' [.308,.369]',' [.070,.188]',' (product)'];return ` r = ${c.raw}${ci[c.dataIndex]||''}`}}}},
+      scales:{
+        x:{...base.scales.x,min:0,max:.55,title:{display:true,text:'Effect size (r)',font:fntTitle,color:mut},ticks:{font:fntLg,color:mut}},
+        y:{...base.scales.y,ticks:{font:{family:"'JetBrains Mono',monospace",size:big?9:8},color:mut}}
+      }}});
+}
+function bldSupp(id,big){
+  const el=document.getElementById(id);if(!el)return;const ex=Chart.getChart(el);if(ex)ex.destroy();
+  return new Chart(el,{type:'bar',data:{labels:["a: Anim→Dehum","b: Dehum→SPV","c: Total","c': Direct","Indirect a×b"],datasets:[{label:'β',data:[.535,.159,-.050,-.135,.085],backgroundColor:[acc2,acc2,gld,acc,grn],borderRadius:3,borderSkipped:false}]},
+    options:{...base,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const ci=['—','—','—','—',' [+.057,+.111]'];return ` β = ${c.raw} ${ci[c.dataIndex]}`}}}},
+      scales:{
+        x:{...base.scales.x,ticks:{font:{family:"'JetBrains Mono',monospace",size:big?9:8},color:mut,maxRotation:0}},
+        y:{...base.scales.y,min:-.2,max:.65,title:{display:true,text:'Standardized β',font:fntTitle,color:mut},ticks:{font:fntLg,color:mut}}
+      }}});
+}
+function bldAsym(id,big){
+  const el=document.getElementById(id);if(!el)return;const ex=Chart.getChart(el);if(ex)ex.destroy();
+  return new Chart(el,{type:'bar',data:{labels:['Path a (→Dehum)','Path b (→SPV|Anim)','Indirect (SPV)'],datasets:[{label:'Democrats',data:[.517,.108,.056],backgroundColor:'rgba(26,58,92,.7)',borderRadius:3},{label:'Republicans',data:[.554,.216,.120],backgroundColor:'rgba(125,24,32,.7)',borderRadius:3}]},
+    options:{...base,
+      plugins:{legend:{labels:{font:fntLg,color:mut}}},
+      scales:{
+        x:{...base.scales.x,ticks:{font:{family:"'JetBrains Mono',monospace",size:big?9:8},color:mut,maxRotation:0}},
+        y:{...base.scales.y,min:0,max:.65,title:{display:true,text:'Standardized β',font:fntTitle,color:mut},ticks:{font:fntLg,color:mut}}
+      }}});
+}
+function bldVdem(id,big){
+  const el=document.getElementById(id);if(!el)return;const ex=Chart.getChart(el);if(ex)ex.destroy();
+  const s=[{x:0,y:.2},{x:0,y:.5},{x:0,y:.1},{x:1,y:.5},{x:1,y:.8},{x:1,y:.3},{x:1,y:1.2},{x:2,y:.8},{x:2,y:1.5},{x:2,y:1.0},{x:2,y:2.0},{x:2,y:.6},{x:3,y:1.5},{x:3,y:2.2},{x:3,y:1.0},{x:3,y:2.5},{x:3,y:1.8},{x:4,y:2.0},{x:4,y:3.0},{x:4,y:1.5},{x:4,y:2.8}];
+  return new Chart(el,{type:'scatter',data:{datasets:[
+    {label:'Country-years (N=4,465)',data:s,backgroundColor:'rgba(125,24,32,.25)',pointRadius:3},
+    {label:'OLS trend (β≈.33)',data:[{x:0,y:.3},{x:1,y:.63},{x:2,y:.96},{x:3,y:1.29},{x:4,y:1.62}],type:'line',borderColor:acc,borderWidth:2,pointRadius:0,fill:false},
+    {label:'U.S. 2020– (max polarization)',data:[{x:4,y:2.0}],backgroundColor:gld,pointRadius:9,pointStyle:'star'}
+  ]},
+    options:{...base,
+      plugins:{legend:{labels:{font:{family:"'JetBrains Mono',monospace",size:big?9:8},color:mut}}},
+      scales:{
+        x:{...base.scales.x,min:-.3,max:4.3,title:{display:true,text:'V-DEM Polarization (0–4)',font:fntTitle,color:mut},ticks:{font:fntLg,color:mut}},
+        y:{...base.scales.y,min:0,max:3.5,title:{display:true,text:'V-DEM Violence (0–4)',font:fntTitle,color:mut},ticks:{font:fntLg,color:mut}}
+      }}});
+}
+function initCharts(){
+  [['c_meta',bldMeta],['c_supp',bldSupp],['c_asym',bldAsym],['c_vdem',bldVdem]].forEach(([id,fn])=>{
+    const el=document.getElementById(id);if(el&&el.offsetParent!==null)fn(id,false);
+  });
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(initCharts,200));
+</script>
+</body>
+</html>
