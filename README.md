@@ -1,6 +1,6 @@
 # Partisan Animosity, Outgroup Dehumanization, and Political Violence
 
-**🖥️ [View the INTERACTIVE poster](https://nfaraher.github.io/thesis-poster/)** · **📄 
+**🖥️ [View the INTERACTIVE poster](https://nfaraher.github.io/thesis-poster/)** · **📄 [Read the full thesis](Faraher_Thesis_IMP_PPE_2026.pdf)**
 
 Undergraduate thesis research — Nathan Faraher
 Bachelor's of Arts in Philosophy, Political Science & Economics 
